@@ -1,0 +1,19 @@
+.qodo
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+target/
+*.o
+*.a
+
+# Debug files
+*.pdb
+
+# OS-specific files
+.DS_Store
+Thumbs.db
