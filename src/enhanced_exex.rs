@@ -27,6 +27,7 @@ use reth_tracing::tracing::{debug, error, info, warn};
 use tokio::sync::{mpsc, Mutex, RwLock};
 
 use crate::errors::*;
+use crate::inter_exex::{InterExExCoordinator, MessageBusConfig, ExExMessage, MessageType, MessagePayload};
 
 /// Maximum number of blocks to process before sending FinishedHeight
 const MAX_BLOCKS_BEFORE_COMMIT: u64 = 100;
@@ -148,6 +149,9 @@ pub struct EnhancedSvmExEx<Node: FullNodeComponents> {
     
     /// Metrics collector
     metrics: Arc<Metrics>,
+    
+    /// Inter-ExEx communication coordinator
+    inter_exex_coordinator: Option<Arc<InterExExCoordinator>>,
 }
 
 /// Internal state of the ExEx
@@ -221,7 +225,81 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
             last_commit_time: Instant::now(),
             event_sender,
             metrics: Arc::new(Metrics::default()),
+            inter_exex_coordinator: None,
         }
+    }
+
+    /// Initialize inter-ExEx communication
+    pub async fn init_inter_exex_communication(&mut self, config: MessageBusConfig, node_id: String) -> SvmExExResult<()> {
+        info!("Initializing inter-ExEx communication for node: {}", node_id);
+        
+        let coordinator = Arc::new(InterExExCoordinator::new(config, node_id)
+            .map_err(|e| SvmExExError::ProcessingError(format!("Failed to create coordinator: {}", e)))?);
+        
+        coordinator.start().await
+            .map_err(|e| SvmExExError::ProcessingError(format!("Failed to start coordinator: {}", e)))?;
+        
+        // Subscribe to relevant message types
+        self.setup_message_subscriptions(&coordinator).await?;
+        
+        self.inter_exex_coordinator = Some(coordinator);
+        Ok(())
+    }
+
+    /// Setup message subscriptions for inter-ExEx communication
+    async fn setup_message_subscriptions(&self, coordinator: &Arc<InterExExCoordinator>) -> SvmExExResult<()> {
+        // Subscribe to transaction proposals
+        let mut tx_receiver = coordinator.subscribe(MessageType::TransactionProposal).await
+            .map_err(|e| SvmExExError::ProcessingError(format!("Failed to subscribe: {}", e)))?;
+        
+        let metrics = self.metrics.clone();
+        tokio::spawn(async move {
+            while let Some(msg) = tx_receiver.recv().await {
+                debug!("Received transaction proposal from {}", msg.source);
+                metrics.transactions_processed.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+        });
+        
+        // Subscribe to state sync messages
+        let mut state_receiver = coordinator.subscribe(MessageType::StateSync).await
+            .map_err(|e| SvmExExError::ProcessingError(format!("Failed to subscribe: {}", e)))?;
+        
+        tokio::spawn(async move {
+            while let Some(msg) = state_receiver.recv().await {
+                debug!("Received state sync from {}", msg.source);
+                // Handle state synchronization
+            }
+        });
+        
+        Ok(())
+    }
+
+    /// Broadcast processed block information to other ExEx instances
+    async fn broadcast_block_processed(&self, block: &ProcessedBlock) -> SvmExExResult<()> {
+        if let Some(coordinator) = &self.inter_exex_coordinator {
+            let state_data = crate::inter_exex::messages::StateData {
+                block_number: block.block_number,
+                state_root: block.state_root,
+                alh: B256::from(block.alh_hash.hash()),
+                tx_count: block.transactions_processed as u64,
+                metrics: crate::inter_exex::messages::ProcessingMetrics {
+                    processing_time_ms: block.processing_time.as_millis() as u64,
+                    successful_txs: block.svm_transactions.iter().filter(|tx| tx.success).count() as u64,
+                    failed_txs: block.svm_transactions.iter().filter(|tx| !tx.success).count() as u64,
+                    gas_used: alloy_primitives::U256::from(0), // Placeholder
+                },
+            };
+            
+            let message = ExExMessage::new(
+                MessageType::StateSync,
+                "svm-exex".to_string(), // Would use actual node ID
+                MessagePayload::StateData(state_data),
+            );
+            
+            coordinator.broadcast(message).await
+                .map_err(|e| SvmExExError::ProcessingError(format!("Failed to broadcast: {}", e)))?;
+        }
+        Ok(())
     }
 
     /// Process a new chain notification
@@ -265,7 +343,7 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
             
             // Track the block as pending
             // In real implementation, we'd wait for processor result
-            self.pending_blocks.push(ProcessedBlock {
+            let processed_block = ProcessedBlock {
                 block_number,
                 block_hash,
                 state_root: block.block.header.state_root,
@@ -273,7 +351,14 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
                 svm_transactions: vec![], // Would be filled by processor
                 processing_time: Duration::from_millis(10), // Placeholder
                 alh_hash: AccountsLatticeHash::default(), // Would be computed
-            });
+            };
+            
+            // Broadcast block processing to other ExEx instances
+            if let Err(e) = self.broadcast_block_processed(&processed_block).await {
+                warn!("Failed to broadcast block processing: {}", e);
+            }
+            
+            self.pending_blocks.push(processed_block);
         }
         
         Ok(())
@@ -410,6 +495,54 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
         }
         
         Ok(())
+    }
+    /// Report load metrics to other ExEx instances for load balancing
+    async fn report_load_metrics(&self) -> SvmExExResult<()> {
+        if let Some(coordinator) = &self.inter_exex_coordinator {
+            let load_metrics = crate::inter_exex::messages::LoadMetrics {
+                load_percentage: self.calculate_load_percentage(),
+                available_compute: 1_000_000, // Placeholder for available compute units
+                queue_depth: self.pending_blocks.len(),
+                avg_processing_time: self.calculate_avg_processing_time(),
+                memory_usage: self.calculate_memory_usage(),
+                bandwidth_usage: 0, // Placeholder
+            };
+            
+            let message = ExExMessage::new(
+                MessageType::LoadInfo,
+                "svm-exex".to_string(), // Would use actual node ID
+                MessagePayload::LoadMetrics(load_metrics),
+            );
+            
+            coordinator.broadcast(message).await
+                .map_err(|e| SvmExExError::ProcessingError(format!("Failed to report load: {}", e)))?;
+        }
+        Ok(())
+    }
+    
+    /// Calculate current load percentage
+    fn calculate_load_percentage(&self) -> u8 {
+        let pending_ratio = (self.pending_blocks.len() as f64 / MAX_BLOCKS_BEFORE_COMMIT as f64 * 100.0) as u8;
+        pending_ratio.min(100)
+    }
+    
+    /// Calculate average processing time
+    fn calculate_avg_processing_time(&self) -> u64 {
+        if self.pending_blocks.is_empty() {
+            return 0;
+        }
+        
+        let total_time: u64 = self.pending_blocks.iter()
+            .map(|b| b.processing_time.as_millis() as u64)
+            .sum();
+        
+        total_time / self.pending_blocks.len() as u64
+    }
+    
+    /// Calculate memory usage percentage
+    fn calculate_memory_usage(&self) -> u8 {
+        // Placeholder - would use actual memory metrics
+        50
     }
 }
 

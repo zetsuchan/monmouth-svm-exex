@@ -44,6 +44,7 @@ pub mod errors;
 pub mod logging;
 pub mod enhanced_exex;
 pub mod enhanced_processor;
+pub mod inter_exex;
 
 // Re-export commonly used types and functions
 pub use errors::{
@@ -188,142 +189,7 @@ pub mod utils {
 }
 
 /// Configuration management
-pub mod config {
-    use crate::errors::*;
-    use serde::{Deserialize, Serialize};
-    use std::path::Path;
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct SvmExExConfig {
-        pub svm_router_address: String,
-        pub ai_agent: AIAgentConfig,
-        pub performance: PerformanceConfig,
-        pub logging: LoggingConfig,
-        pub cross_chain: CrossChainConfig,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct AIAgentConfig {
-        pub enabled: bool,
-        pub decision_timeout_ms: u64,
-        pub memory_cache_size: usize,
-        pub confidence_threshold: f64,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct PerformanceConfig {
-        pub max_concurrent_transactions: usize,
-        pub transaction_timeout_ms: u64,
-        pub cache_size: usize,
-        pub enable_metrics: bool,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct LoggingConfig {
-        pub level: String,
-        pub format: String, // "json" or "text"
-        pub enable_spans: bool,
-        pub enable_ai_debug: bool,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct CrossChainConfig {
-        pub enable_state_sync: bool,
-        pub sync_interval_ms: u64,
-        pub address_mapping_cache_size: usize,
-    }
-
-    impl Default for SvmExExConfig {
-        fn default() -> Self {
-            Self {
-                svm_router_address: "0x0000000000000000000000000000000000000000".to_string(),
-                ai_agent: AIAgentConfig {
-                    enabled: true,
-                    decision_timeout_ms: 1000,
-                    memory_cache_size: 10000,
-                    confidence_threshold: 0.8,
-                },
-                performance: PerformanceConfig {
-                    max_concurrent_transactions: 1000,
-                    transaction_timeout_ms: 5000,
-                    cache_size: 50000,
-                    enable_metrics: true,
-                },
-                logging: LoggingConfig {
-                    level: "info".to_string(),
-                    format: "json".to_string(),
-                    enable_spans: true,
-                    enable_ai_debug: true,
-                },
-                cross_chain: CrossChainConfig {
-                    enable_state_sync: true,
-                    sync_interval_ms: 1000,
-                    address_mapping_cache_size: 10000,
-                },
-            }
-        }
-    }
-
-    impl SvmExExConfig {
-        pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, ConfigurationError> {
-            let content = std::fs::read_to_string(&path).map_err(|_| {
-                ConfigurationError::FileNotFound {
-                    path: path.as_ref().to_string_lossy().to_string(),
-                }
-            })?;
-
-            let config: Self = toml::from_str(&content).map_err(|e| {
-                ConfigurationError::ParsingFailed {
-                    reason: e.to_string(),
-                }
-            })?;
-
-            config.validate()?;
-            Ok(config)
-        }
-
-        pub fn load_from_env() -> Result<Self, ConfigurationError> {
-            let mut config = Self::default();
-
-            if let Ok(addr) = std::env::var("SVM_ROUTER_ADDRESS") {
-                config.svm_router_address = addr;
-            }
-
-            if let Ok(enabled) = std::env::var("AI_AGENT_ENABLED") {
-                config.ai_agent.enabled = enabled.parse().unwrap_or(true);
-            }
-
-            if let Ok(level) = std::env::var("LOG_LEVEL") {
-                config.logging.level = level;
-            }
-
-            config.validate()?;
-            Ok(config)
-        }
-
-        fn validate(&self) -> Result<(), ConfigurationError> {
-            // Validate SVM router address
-            if self.svm_router_address.len() != 42 || !self.svm_router_address.starts_with("0x") {
-                return Err(ConfigurationError::InvalidValue {
-                    key: "svm_router_address".to_string(),
-                    value: self.svm_router_address.clone(),
-                    reason: "Invalid Ethereum address format".to_string(),
-                });
-            }
-
-            // Validate confidence threshold
-            if !(0.0..=1.0).contains(&self.ai_agent.confidence_threshold) {
-                return Err(ConfigurationError::InvalidValue {
-                    key: "ai_agent.confidence_threshold".to_string(),
-                    value: self.ai_agent.confidence_threshold.to_string(),
-                    reason: "Must be between 0.0 and 1.0".to_string(),
-                });
-            }
-
-            Ok(())
-        }
-    }
-}
+pub mod config;
 
 // Feature-gated modules
 #[cfg(feature = "ai-agents")]
