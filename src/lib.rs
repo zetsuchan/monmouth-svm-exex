@@ -45,6 +45,12 @@ pub mod logging;
 pub mod enhanced_exex;
 pub mod enhanced_processor;
 pub mod inter_exex;
+pub mod sync;
+pub mod vector_store;
+
+// Feature-gated modules
+#[cfg(feature = "ai-agents")]
+pub mod ai;
 
 // Re-export commonly used types and functions
 pub use errors::{
@@ -191,28 +197,6 @@ pub mod utils {
 /// Configuration management
 pub mod config;
 
-// Feature-gated modules
-#[cfg(feature = "ai-agents")]
-pub mod ai {
-    //! AI agent implementations and utilities
-    
-    pub use crate::traits::{AIAgent, RoutingDecision};
-    
-    /// Mock AI agent for testing and development
-    pub struct MockAIAgent {
-        confidence_threshold: f64,
-        memory_cache: std::collections::HashMap<String, Vec<u8>>,
-    }
-    
-    impl MockAIAgent {
-        pub fn new(confidence_threshold: f64) -> Self {
-            Self {
-                confidence_threshold,
-                memory_cache: std::collections::HashMap::new(),
-            }
-        }
-    }
-}
 
 // Re-export key dependencies for convenience
 pub use eyre;

@@ -3,11 +3,21 @@
 //! This module provides hierarchical memory systems for agent learning and context retention.
 
 pub mod agent_integration;
+pub mod reorg_handling;
+pub mod rollback;
 
 pub use agent_integration::{
     AgentMemory, MemoryConfig, MemoryItem, MemoryEntry,
     Episode, EpisodeOutcome, Concept, Goal,
     MemoryType, MemoryStats,
+};
+pub use reorg_handling::{
+    MemoryReorgHandler, ReorgConfig, MemoryCheckpoint, MemorySnapshot,
+    ReorgMetrics, BlockInfo, CheckpointManager, RollbackEngine,
+};
+pub use rollback::{
+    MemoryRollbackManager, RollbackConfig, RollbackState, RollbackPhase,
+    ValidationResults, RollbackValidator, StateRestorer,
 };
 
 use std::sync::Arc;
