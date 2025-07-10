@@ -12,10 +12,12 @@ categories = ["cryptography::cryptocurrencies"]
 [[bin]]
 name = "implementation1"
 path = "implementation1/main.rs"
+required-features = ["solana"]
 
 [[bin]]
 name = "implementation2"  
 path = "implementation2/main.rs"
+required-features = ["solana"]
 
 [dependencies]
 # Reth dependencies for Ethereum node functionality - v1.5.1 release (commit dbe7ee9c)
@@ -76,13 +78,17 @@ faiss = { version = "0.12", optional = true }
 alloy-primitives = "1.2.0"
 # alloy-rpc-types = "0.2"  # Will add back after basic compilation works
 
-# Temporary mocks for Solana integration while fixing compilation
-# solana-program = { version = "1.16", optional = true }
-# solana-sdk = { version = "1.16", optional = true }
+# Solana integration dependencies
+solana-program = { version = "1.17", optional = true }
+solana-sdk = { version = "1.17", optional = true }
+solana-runtime = { version = "1.17", optional = true }
 
 # Decision making and planning
 petgraph = "0.6"
 clap = { version = "4.0", features = ["derive"] }
+
+# Text processing
+regex = "1.10"
 
 # Configuration and environment
 config = "0.14"
@@ -101,12 +107,13 @@ tracing-test = "0.2"
 rand = "0.8"
 
 [features]
-default = ["full"]
-full = ["testing", "metrics", "ai-agents"]
+default = ["standard"]
+standard = ["testing", "metrics", "ai-agents"]
+full = ["testing", "metrics", "ai-agents", "solana"]
 testing = []
 metrics = []
 ai-agents = ["faiss"]
-# solana = ["solana-program", "solana-sdk"]
+solana = ["solana-program", "solana-sdk", "solana-runtime"]
 vector-db = ["faiss"]
 minimal = []
 

@@ -47,6 +47,7 @@ pub mod enhanced_processor;
 pub mod inter_exex;
 pub mod sync;
 pub mod vector_store;
+pub mod svm;
 
 // Feature-gated modules
 #[cfg(feature = "ai-agents")]
@@ -91,6 +92,12 @@ pub use batch::{
 pub use deployment::{
     DeploymentManager, DeploymentConfig, HealthChecker, HealthCheckConfig,
     HealthStatus, Environment,
+};
+
+// SVM processor exports
+pub use svm::{
+    SvmProcessor, SvmProcessorImpl, SvmExecutionResult, SvmConfig,
+    ProcessedTransaction, StateChange, create_svm_processor,
 };
 
 // Version and build information

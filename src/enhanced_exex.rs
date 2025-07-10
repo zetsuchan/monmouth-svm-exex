@@ -28,9 +28,7 @@ use tokio::sync::{mpsc, Mutex, RwLock};
 
 use crate::errors::*;
 use crate::inter_exex::{InterExExCoordinator, MessageBusConfig, ExExMessage, MessageType, MessagePayload};
-
-// Type alias for Chain until we figure out the correct import
-type Chain = dyn std::any::Any;
+use crate::svm::{SvmProcessor, create_svm_processor, ProcessedTransaction as SvmProcessedTransaction};
 
 /// Maximum number of blocks to process before sending FinishedHeight
 const MAX_BLOCKS_BEFORE_COMMIT: u64 = 100;
@@ -329,7 +327,7 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
     }
 
     /// Handle committed chain
-    async fn handle_chain_committed(&mut self, chain: &Arc<Chain>) -> SvmExExResult<()> {
+    async fn handle_chain_committed<C>(&mut self, chain: &Arc<C>) -> SvmExExResult<()> {
         self.state = ExExState::Processing;
         
         // TODO: Fix when proper Chain type is available
@@ -353,10 +351,10 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
     }
 
     /// Handle chain reorg
-    async fn handle_chain_reorged(
+    async fn handle_chain_reorged<C>(
         &mut self, 
-        old: &Arc<Chain>, 
-        new: &Arc<Chain>
+        old: &Arc<C>, 
+        new: &Arc<C>
     ) -> SvmExExResult<()> {
         self.state = ExExState::Reorging;
         self.metrics.reorgs_handled.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -378,7 +376,7 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
     }
 
     /// Handle chain reversion
-    async fn handle_chain_reverted(&mut self, old: &Arc<Chain>) -> SvmExExResult<()> {
+    async fn handle_chain_reverted<C>(&mut self, old: &Arc<C>) -> SvmExExResult<()> {
         // TODO: Fix when proper Chain type is available
         warn!("Chain reverted (stubbed implementation)");
         
@@ -559,25 +557,58 @@ impl<Node: FullNodeComponents> Future for EnhancedSvmExEx<Node> {
     }
 }
 
-/// Async block processor task
+/// Async block processor task with SVM integration
 async fn process_blocks(mut receiver: mpsc::Receiver<ProcessorCommand>) {
-    info!("Block processor task started");
+    info!("Block processor task started with SVM integration");
+    
+    // Create SVM processor
+    let svm_processor = create_svm_processor();
     
     while let Some(command) = receiver.recv().await {
         match command {
             ProcessorCommand::ProcessBlock(block) => {
-                // Process the block
-                debug!("Processing block {}", block.number());
-                // Actual SVM processing would happen here
+                // Process the block through SVM
+                debug!("Processing block {} through SVM", block.number());
+                
+                // Process each transaction in the block
+                for tx in block.body() {
+                    // TODO: Filter transactions for SVM (e.g., specific contract calls)
+                    // For now, process all transactions as a placeholder
+                    
+                    match svm_processor.process_transaction(&tx.input().0).await {
+                        Ok(result) => {
+                            debug!("SVM processed tx {:?}: success={}", tx.hash(), result.success);
+                        }
+                        Err(e) => {
+                            error!("SVM processing error for tx {:?}: {}", tx.hash(), e);
+                        }
+                    }
+                }
             }
             ProcessorCommand::Reorg { old_chain, new_chain } => {
                 info!("Processing reorg: {} old blocks, {} new blocks", 
                       old_chain.len(), new_chain.len());
-                // Handle reorg in processor
+                
+                // Find the common ancestor block
+                if let Some(fork_block) = old_chain.first() {
+                    // Revert SVM state to before the fork
+                    if let Err(e) = svm_processor.revert_to_checkpoint(0).await {
+                        error!("Failed to revert SVM state: {}", e);
+                    }
+                }
+                
+                // Reprocess new chain
+                for block in new_chain {
+                    for tx in block.body() {
+                        if let Err(e) = svm_processor.process_transaction(&tx.input().0).await {
+                            error!("SVM reprocessing error: {}", e);
+                        }
+                    }
+                }
             }
             ProcessorCommand::Checkpoint { block_number } => {
-                debug!("Creating checkpoint at block {}", block_number);
-                // Create state snapshot
+                debug!("Creating SVM checkpoint at block {}", block_number);
+                // TODO: Implement checkpoint creation in SVM processor
             }
             ProcessorCommand::Shutdown => {
                 info!("Block processor shutting down");

@@ -678,7 +678,7 @@ impl LearningDatabase {
         }
     }
     
-    async fn record_execution(&mut self, tx_hash: [u8; 32], confidence: f64, success: bool) -> Result<(), eyre::Error> {
+    async fn record_execution(&mut self, tx_hash: [u8; 32], confidence: f64, success: bool) -> Result<()> {
         let record = LearningRecord {
             tx_hash,
             timestamp: std::time::SystemTime::now(),
@@ -700,7 +700,7 @@ impl LearningDatabase {
         Ok(())
     }
     
-    async fn get_statistics(&self) -> Result<LearningStatistics, eyre::Error> {
+    async fn get_statistics(&self) -> Result<LearningStatistics> {
         let total = self.records.len() as u64;
         let successful = self.records.values().filter(|r| r.actual.success).count() as u64;
         let avg_confidence = if total > 0 {
@@ -729,7 +729,7 @@ impl LearningDatabase {
         ])
     }
     
-    async fn import_patterns(&mut self, _patterns: Vec<Pattern>) -> Result<(), eyre::Error> {
+    async fn import_patterns(&mut self, _patterns: Vec<Pattern>) -> Result<()> {
         // Import patterns - placeholder implementation
         Ok(())
     }
@@ -919,7 +919,7 @@ fn has_suspicious_sequences(data: &[u8]) -> bool {
 
 #[async_trait]
 impl AIDecisionEngine for EnhancedAIDecisionEngine {
-    async fn analyze_transaction(&self, context: TransactionContext) -> Result<TraitRoutingDecision, eyre::Error> {
+    async fn analyze_transaction(&self, context: TransactionContext) -> Result<TraitRoutingDecision> {
         // Convert TransactionContext to byte array for existing analysis
         let tx_data = bincode::serialize(&context)
             .map_err(|e| eyre::eyre!("Failed to serialize context: {}", e))?;
@@ -951,7 +951,7 @@ impl AIDecisionEngine for EnhancedAIDecisionEngine {
         })
     }
     
-    async fn update_with_feedback(&self, feedback: ExecutionFeedback) -> Result<(), eyre::Error> {
+    async fn update_with_feedback(&self, feedback: ExecutionFeedback) -> Result<()> {
         // Update execution history
         let history_entry = ExecutionHistory {
             total_executions: 1,
@@ -977,7 +977,7 @@ impl AIDecisionEngine for EnhancedAIDecisionEngine {
         Ok(())
     }
     
-    async fn get_confidence_metrics(&self) -> Result<ConfidenceMetrics, eyre::Error> {
+    async fn get_confidence_metrics(&self) -> Result<ConfidenceMetrics> {
         let weights = self.weights.read();
         let stats = self.learning_db.lock().await.get_statistics().await?;
         
@@ -996,7 +996,7 @@ impl AIDecisionEngine for EnhancedAIDecisionEngine {
         })
     }
     
-    async fn export_state(&self) -> Result<AIEngineState, eyre::Error> {
+    async fn export_state(&self) -> Result<AIEngineState> {
         let weights = self.weights.read();
         let patterns = self.learning_db.lock().await.export_patterns().await?;
         
@@ -1043,7 +1043,7 @@ impl AIDecisionEngine for EnhancedAIDecisionEngine {
         })
     }
     
-    async fn import_state(&self, state: AIEngineState) -> Result<(), eyre::Error> {
+    async fn import_state(&self, state: AIEngineState) -> Result<()> {
         // Import weights
         if let Ok(imported_weights) = bincode::deserialize::<DecisionWeights>(&state.model_params.weights) {
             let mut weights = self.weights.write();
@@ -1083,7 +1083,7 @@ impl AIDecisionEngine for EnhancedAIDecisionEngine {
 
 #[async_trait]
 impl RAGEnabledEngine for EnhancedAIDecisionEngine {
-    async fn store_context(&self, key: String, context: ContextData) -> Result<(), eyre::Error> {
+    async fn store_context(&self, key: String, context: ContextData) -> Result<()> {
         self.rag_processor.store_context(key, context).await
             .map_err(|e| eyre::eyre!("Failed to store context: {}", e))
     }
@@ -1093,7 +1093,7 @@ impl RAGEnabledEngine for EnhancedAIDecisionEngine {
             .map_err(|e| eyre::eyre!("Failed to retrieve context: {}", e))
     }
     
-    async fn update_embeddings(&self, data: Vec<EmbeddingData>) -> Result<(), eyre::Error> {
+    async fn update_embeddings(&self, data: Vec<EmbeddingData>) -> Result<()> {
         self.rag_processor.update_embeddings(data).await
             .map_err(|e| eyre::eyre!("Failed to update embeddings: {}", e))
     }
@@ -1101,7 +1101,7 @@ impl RAGEnabledEngine for EnhancedAIDecisionEngine {
 
 #[async_trait]
 impl CrossExExCoordinator for EnhancedAIDecisionEngine {
-    async fn coordinate_decision(&self, proposals: Vec<DecisionProposal>) -> Result<CoordinatedDecision, eyre::Error> {
+    async fn coordinate_decision(&self, proposals: Vec<DecisionProposal>) -> Result<CoordinatedDecision> {
         // Simple weighted consensus implementation
         let mut decision_scores: HashMap<DecisionType, f64> = HashMap::new();
         let mut total_weight = 0.0;
@@ -1152,7 +1152,7 @@ impl CrossExExCoordinator for EnhancedAIDecisionEngine {
         }).collect())
     }
     
-    async fn integrate_patterns(&self, patterns: Vec<LearnedPattern>) -> Result<(), eyre::Error> {
+    async fn integrate_patterns(&self, patterns: Vec<LearnedPattern>) -> Result<()> {
         let internal_patterns: Vec<Pattern> = patterns.into_iter().map(|p| Pattern {
             id: p.id,
             description: p.description,

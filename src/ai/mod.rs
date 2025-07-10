@@ -42,9 +42,9 @@ pub use memory::{
 
 // RAG system exports
 pub use rag::{
-    AgentContextAdapter, AgentContext, QueryMode, SimilarityThreshold,
-    ContextIntegrator, IntegrationStrategy, IntegrationResult,
-    ContextMetadataEnricher, Enricher,
+    AgentContextProvider, AgentContextConfig, AgentContext,
+    RankedContext, ContextSource, SourceType, FusionStrategy,
+    RAGSystem, VectorStore, SearchResult, QueryProcessor,
 };
 
 // Embedding system exports

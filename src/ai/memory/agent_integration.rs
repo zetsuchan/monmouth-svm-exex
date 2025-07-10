@@ -14,6 +14,25 @@ use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, info, warn};
 
+/// Query engine for memory operations
+pub trait MemoryQueryEngine: Send + Sync {
+    /// Query memories based on criteria
+    fn query(&self, query: &str) -> Vec<MemoryItem>;
+}
+
+/// Status of a memory item
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ItemStatus {
+    /// Active and available
+    Active,
+    /// Archived but accessible
+    Archived,
+    /// Pending consolidation
+    Pending,
+    /// Marked for deletion
+    Deleted,
+}
+
 /// Agent memory system with hierarchical storage
 pub struct AgentMemory {
     /// Short-term memory (working memory)

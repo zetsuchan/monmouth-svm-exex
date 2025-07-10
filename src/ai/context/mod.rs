@@ -8,9 +8,10 @@ pub mod cache;
 pub use preprocessing::{
     ContextPreprocessor, PreprocessingConfig, PreprocessedContext,
     ContextChunk, ContextMetadata, TransactionType,
+    ContractInfo, EntityMention, TemporalReference,
 };
 pub use cache::{
-    ContextCache, CacheConfig, CacheKey, CacheOperations,
+    ContextCache, CacheConfig, CacheKey, CacheOperations, CacheStats,
 };
 
 use std::sync::Arc;

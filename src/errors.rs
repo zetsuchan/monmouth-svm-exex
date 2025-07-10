@@ -42,6 +42,12 @@ pub enum SvmExExError {
 
     #[error("Channel send error: {0}")]
     ChannelSend(String),
+    
+    #[error("Checkpoint not found: {0}")]
+    CheckpointNotFound(u64),
+    
+    #[error("SVM execution error: {0}")]
+    SvmExecutionError(String),
 
     #[error("Unknown error: {0}")]
     Unknown(String),

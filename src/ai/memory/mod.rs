@@ -9,11 +9,15 @@ pub mod rollback;
 pub use agent_integration::{
     AgentMemory, MemoryConfig, MemoryItem, MemoryEntry,
     Episode, EpisodeOutcome, Concept, Goal,
-    MemoryType, MemoryStats,
+    MemoryType, MemoryStats, ItemStatus,
+    ShortTermMemory, LongTermMemory, EpisodicMemory, SemanticMemory,
+    Relationship, RelationshipType, MemoryQueryEngine,
 };
 pub use reorg_handling::{
     MemoryReorgHandler, ReorgConfig, MemoryCheckpoint, MemorySnapshot,
     ReorgMetrics, BlockInfo, CheckpointManager, RollbackEngine,
+    ShortTermSnapshot, LongTermSnapshot, EpisodicSnapshot, SemanticSnapshot,
+    ConceptHierarchy,
 };
 pub use rollback::{
     MemoryRollbackManager, RollbackConfig, RollbackState, RollbackPhase,
