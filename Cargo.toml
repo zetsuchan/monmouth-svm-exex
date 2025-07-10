@@ -81,7 +81,10 @@ dotenv = "0.15"
 tokio-test = "0.4"
 proptest = "1.0"
 tempfile = "3.0"
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+futures-util = "0.3"
+tracing-test = "0.2"
+rand = "0.8"
 
 [features]
 default = ["full"]

@@ -4,8 +4,13 @@
 //! including AI agent execution scenarios, EVM->SVM transaction routing, and
 //! cross-chain state management.
 
+mod integration;
+
+// Re-export integration test modules
+pub use integration::*;
+
 #[cfg(test)]
-mod tests {
+mod legacy_tests {
     use std::sync::Arc;
     use tokio::sync::Mutex;
     
