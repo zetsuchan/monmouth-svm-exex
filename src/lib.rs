@@ -48,6 +48,8 @@ pub mod inter_exex;
 pub mod sync;
 pub mod vector_store;
 pub mod svm;
+pub mod rag_integration;
+pub mod state_sync;
 
 // Feature-gated modules
 #[cfg(feature = "ai-agents")]
@@ -98,6 +100,16 @@ pub use deployment::{
 pub use svm::{
     SvmProcessor, SvmProcessorImpl, SvmExecutionResult, SvmConfig,
     ProcessedTransaction, StateChange, create_svm_processor,
+};
+
+// RAG integration exports
+pub use rag_integration::{
+    RagIntegrationService, RagIntegrationConfig, RagEnhancedProcessor,
+};
+
+// State synchronization exports
+pub use state_sync::{
+    StateSyncService, StateSyncConfig, StateInfo,
 };
 
 // Version and build information

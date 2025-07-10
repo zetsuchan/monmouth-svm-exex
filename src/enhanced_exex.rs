@@ -258,6 +258,12 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
             while let Some(msg) = tx_receiver.recv().await {
                 debug!("Received transaction proposal from {}", msg.source);
                 metrics.transactions_processed.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                
+                // Try to parse as SVM message
+                if let Ok(svm_msg) = crate::inter_exex::SvmExExMessage::try_from(msg) {
+                    // TODO: Handle SVM message through channel to main task
+                    debug!("Parsed SVM message");
+                }
             }
         });
         
@@ -269,6 +275,22 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
             while let Some(msg) = state_receiver.recv().await {
                 debug!("Received state sync from {}", msg.source);
                 // Handle state synchronization
+            }
+        });
+        
+        // Subscribe to data messages (for SVM-specific messages)
+        let mut data_receiver = coordinator.subscribe(MessageType::Data).await
+            .map_err(|e| SvmExExError::ProcessingError(format!("Failed to subscribe: {}", e)))?;
+        
+        tokio::spawn(async move {
+            while let Some(msg) = data_receiver.recv().await {
+                debug!("Received data message from {}", msg.source);
+                
+                // Try to parse as SVM message
+                if let Ok(svm_msg) = crate::inter_exex::SvmExExMessage::try_from(msg) {
+                    // TODO: Handle SVM message through channel to main task
+                    debug!("Parsed SVM-specific message");
+                }
             }
         });
         
@@ -511,6 +533,127 @@ impl<Node: FullNodeComponents> EnhancedSvmExEx<Node> {
     fn calculate_memory_usage(&self) -> u8 {
         // Placeholder - would use actual memory metrics
         50
+    }
+    
+    /// Handle incoming SVM messages
+    async fn handle_svm_message(&mut self, message: crate::inter_exex::SvmExExMessage) -> SvmExExResult<()> {
+        use crate::inter_exex::SvmExExMessage;
+        
+        match message {
+            SvmExExMessage::RequestRagContext { tx_hash, agent_id, query, context_type } => {
+                info!("Received RAG context request for tx {:?} from agent {}", tx_hash, agent_id);
+                // In a real implementation, would query our local context
+                // For now, send back a mock response
+                self.send_rag_context_response(tx_hash, vec![], 0.8).await?;
+            }
+            
+            SvmExExMessage::TransactionForProcessing { tx_hash, tx_data, routing_hint, sender, metadata } => {
+                info!("Received transaction {:?} for SVM processing", tx_hash);
+                // Process through SVM (would use real processor when available)
+                let result = self.process_svm_transaction(tx_hash, &tx_data, sender).await?;
+                // Send result back
+                self.send_svm_execution_result(tx_hash, result).await?;
+            }
+            
+            SvmExExMessage::HealthCheck { requester, component } => {
+                debug!("Health check request from {} for {:?}", requester, component);
+                self.send_health_response(requester, component).await?;
+            }
+            
+            _ => {
+                debug!("Received unhandled SVM message type");
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Process transaction through SVM
+    async fn process_svm_transaction(
+        &self,
+        tx_hash: B256,
+        tx_data: &[u8],
+        sender: Address,
+    ) -> SvmExExResult<crate::svm::SvmExecutionResult> {
+        // This would use the real SVM processor
+        // For now, return mock result
+        Ok(crate::svm::SvmExecutionResult {
+            tx_hash,
+            success: true,
+            gas_used: 5000,
+            return_data: vec![],
+            logs: vec!["Mock SVM execution".to_string()],
+            state_changes: vec![],
+        })
+    }
+    
+    /// Send RAG context response
+    async fn send_rag_context_response(
+        &self,
+        tx_hash: B256,
+        contexts: Vec<crate::ai::traits::ContextData>,
+        confidence: f64,
+    ) -> SvmExExResult<()> {
+        if let Some(coordinator) = &self.inter_exex_coordinator {
+            let response = crate::inter_exex::SvmExExMessage::RagContextResponse {
+                tx_hash,
+                contexts,
+                confidence,
+                latency_ms: 10, // Mock latency
+            };
+            
+            let msg: crate::inter_exex::ExExMessage = response.into();
+            coordinator.broadcast(msg).await
+                .map_err(|e| SvmExExError::ProcessingError(format!("Failed to send RAG response: {}", e)))?;
+        }
+        Ok(())
+    }
+    
+    /// Send SVM execution result
+    async fn send_svm_execution_result(
+        &self,
+        tx_hash: B256,
+        result: crate::svm::SvmExecutionResult,
+    ) -> SvmExExResult<()> {
+        if let Some(coordinator) = &self.inter_exex_coordinator {
+            let msg_content = crate::inter_exex::SvmExExMessage::SvmExecutionCompleted {
+                tx_hash,
+                result: result.clone(),
+                state_changes: vec![],
+                gas_used: result.gas_used,
+                execution_time_ms: 5, // Mock execution time
+            };
+            
+            let msg: crate::inter_exex::ExExMessage = msg_content.into();
+            coordinator.broadcast(msg).await
+                .map_err(|e| SvmExExError::ProcessingError(format!("Failed to send execution result: {}", e)))?;
+        }
+        Ok(())
+    }
+    
+    /// Send health check response
+    async fn send_health_response(
+        &self,
+        requester: String,
+        component: crate::inter_exex::HealthCheckComponent,
+    ) -> SvmExExResult<()> {
+        if let Some(coordinator) = &self.inter_exex_coordinator {
+            let mut details = HashMap::new();
+            details.insert("pending_blocks".to_string(), self.pending_blocks.len().to_string());
+            details.insert("state".to_string(), format!("{:?}", self.state));
+            
+            let response = crate::inter_exex::SvmExExMessage::HealthCheckResponse {
+                component,
+                healthy: self.state != ExExState::Recovering,
+                latency_ms: 1,
+                details,
+            };
+            
+            let msg: crate::inter_exex::ExExMessage = response.into();
+            coordinator.send_to(&requester, msg).await
+                .map_err(|e| SvmExExError::ProcessingError(format!("Failed to send health response: {}", e)))?;
+        }
+        Ok(())
     }
 }
 

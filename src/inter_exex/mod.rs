@@ -6,6 +6,7 @@
 pub mod bus;
 pub mod messages;
 pub mod protocol;
+pub mod svm_messages;
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,6 +15,11 @@ use eyre::Result;
 pub use bus::{MessageBus, MessageBusConfig};
 pub use messages::{ExExMessage, MessageType, MessagePayload, NodeInfo};
 pub use protocol::{Protocol, ProtocolVersion};
+pub use svm_messages::{
+    SvmExExMessage, SvmMessageHandler, TransactionMetadata, ContextType,
+    AccountUpdate, AccountUpdateType, MemoryItem, MemoryType, MemoryPriority,
+    MemoryQuery, HealthCheckComponent,
+};
 
 /// Main coordinator for inter-ExEx communication
 pub struct InterExExCoordinator {
