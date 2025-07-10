@@ -1,5 +1,121 @@
 # Changelog
 
+## [0.6.0] - 2025-07-09 - RAG ExEx Integration & Advanced AI Pipeline
+
+### 🧠 RAG ExEx Repository Implementation (Phase 1 - Tasks 2.5-2.8)
+
+#### Context Pre-processing System (Task 2.5)
+- **Real-time Transaction Processing**: Optimized for SVM speed requirements
+  - Configurable chunking strategies for transaction data
+  - Metadata extraction: contracts, entities, patterns, temporal references
+  - Context enrichment pipeline with custom enrichers
+  - Transaction type classification (Transfer, Swap, Stake, etc.)
+
+#### Agent Memory Integration (Task 2.6)
+- **Hierarchical Memory Architecture**: Multi-tier memory system
+  - Short-term memory: Recent transactions with fast access
+  - Long-term memory: Consolidated patterns and learnings
+  - Episodic memory: Event sequences and causality tracking
+  - Semantic memory: Concepts and relationships
+- **Memory Operations**:
+  - Consolidation: Short-term to long-term transfer
+  - Forgetting: Decay-based cleanup for efficiency
+  - Query engine: Multiple search strategies (similarity, temporal, associative)
+  - Relationship tracking: Entity and concept connections
+
+#### Real-time Embedding Pipeline (Task 2.7)
+- **Streaming Embeddings**: Optimized for low-latency
+  - Micro-batching for throughput optimization
+  - Multi-model support with adaptive selection
+  - Model strategies: Fastest, MostAccurate, Balanced, Adaptive
+  - Embedding cache with TTL and hit tracking
+- **Pipeline Features**:
+  - Concurrent request handling with semaphores
+  - Timeout protection for reliability
+  - Performance monitoring and metrics
+  - Fallback processing for error resilience
+
+#### Knowledge Graph Integration (Task 2.8)
+- **SVM Transaction Graph**: Entity and relationship tracking
+  - Entity types: Contract, Account, Token, Pattern, Protocol, Agent
+  - Edge types: Calls, Transfers, Deploys, Owns, Similar, PartOfPattern
+  - Pattern detection with configurable templates
+  - Graph analysis: Centrality, clustering, anomaly detection
+- **Graph Operations**:
+  - Real-time updates from transactions
+  - Path finding and neighbor discovery
+  - Pattern matching and trend identification
+  - Cross-graph queries for comprehensive insights
+
+### 🔧 Enhanced AI Infrastructure
+
+#### Multi-layer Context Caching
+- **Three-tier Cache System**:
+  - L1 (Hot): In-memory LRU for frequent access
+  - L2 (Warm): DashMap for concurrent operations
+  - L3 (Cold): Prepared for disk storage
+- **Cache Features**:
+  - Prefetching based on access patterns
+  - Cache warming for predictable workloads
+  - Eviction policies with configurable strategies
+  - Performance metrics and hit rate tracking
+
+#### Batch Processing System
+- **Large-scale Operations**: Designed for bulk embedding generation
+  - Configurable worker pools with parallel processing
+  - Checkpoint support for long-running operations
+  - Multiple output formats: JSON, Binary, Parquet, HDF5
+  - Progress tracking with ETA estimation
+- **Reliability Features**:
+  - Automatic retry with exponential backoff
+  - Error recovery and partial result handling
+  - Resource usage monitoring
+  - Compression support for storage efficiency
+
+#### Unified AI Coordinator
+- **Integrated Pipeline**: All AI subsystems work together
+  - New `process_with_rag_pipeline` method for full integration
+  - Context flows through: Preprocessing → Embeddings → Memory → Knowledge Graph → RAG → Decision
+  - Service initialization with dependency management
+  - Configuration system for all components
+
+### 📊 Architecture Enhancements
+
+#### Module Organization
+- **AI Module Structure**:
+  ```
+  ai/
+  ├── context/          # Context processing and caching
+  ├── memory/           # Agent memory systems
+  ├── rag/              # RAG adapters and integration
+  ├── embeddings/       # Real-time and batch processing
+  └── knowledge_graph/  # Entity relationship management
+  ```
+
+#### Integration Points
+- **Data Flow**: Seamless integration between components
+- **Performance**: Optimized for SVM's speed requirements
+- **Scalability**: Designed for high-throughput operations
+- **Extensibility**: Easy to add new processors and strategies
+
+### 🚀 Performance Optimizations
+- **Caching**: Multi-layer caching reduces redundant processing
+- **Parallelism**: Concurrent processing throughout the pipeline
+- **Batching**: Micro-batching for optimal throughput
+- **Adaptive Systems**: Components adjust based on load
+
+### 📝 Technical Improvements
+- **Type Safety**: Strong typing with comprehensive error handling
+- **Async First**: Tokio-based async operations throughout
+- **Monitoring**: Built-in metrics and performance tracking
+- **Documentation**: Extensive inline documentation
+
+### Next Steps
+- Vector database integration for persistent storage
+- Enhanced RAG adapter with full implementation
+- Production deployment optimizations
+- Comprehensive benchmarking suite
+
 ## [0.5.0] - 2025-07-09 - Inter-ExEx Communication & AI Trait System
 
 ### 🌐 Cross-ExEx Communication Infrastructure
