@@ -52,6 +52,10 @@ pub mod vector_store;
 #[cfg(feature = "ai-agents")]
 pub mod ai;
 
+// Stub implementations for when features are disabled
+#[cfg(not(feature = "ai-agents"))]
+pub mod stubs;
+
 // Performance optimization modules
 pub mod optimization;
 pub mod batch;
@@ -64,8 +68,13 @@ pub use errors::{
 };
 
 pub use logging::{
-    init_logging, init_ai_agent_logging, svm_transaction_span, ai_agent_span,
-    cross_chain_span, PerformanceLogger, log_ai_decision, log_transaction_routing,
+    init_logging, svm_transaction_span, cross_chain_span, PerformanceLogger,
+};
+
+// AI-specific exports only when feature is enabled
+#[cfg(feature = "ai-agents")]
+pub use logging::{
+    init_ai_agent_logging, ai_agent_span, log_ai_decision, log_transaction_routing,
 };
 
 // Performance optimization exports

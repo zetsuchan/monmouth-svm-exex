@@ -7,12 +7,13 @@
 //! - Advanced AI decision engine
 
 use std::{
-    collections::{HashMap, LruCache},
+    collections::HashMap,
     sync::Arc,
     time::{Duration, Instant, SystemTime},
 };
 
 use dashmap::DashMap;
+use lru::LruCache;
 use parking_lot::RwLock;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -527,7 +528,7 @@ impl EnhancedAIDecisionEngine {
             safety -= 0.2;
         }
         
-        safety.max(0.0)
+        safety.max(0.0f64)
     }
 
     async fn detect_anomalies(&self, data: &[u8]) -> f64 {
@@ -705,7 +706,7 @@ impl AnomalyDetector {
             anomaly_score += 0.5;
         }
         
-        anomaly_score.min(1.0)
+        anomaly_score.min(1.0f64)
     }
 }
 

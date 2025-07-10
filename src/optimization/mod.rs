@@ -11,7 +11,7 @@ pub use query::{
     QueryOptimizer, QueryOptimizerConfig, QueryAnalysis, OptimizedQuery,
     QueryType, QueryIntent, QueryVariant, OptimizationStrategy,
     QueryPlan, QueryStep, QueryStepType, PerformanceEstimate,
-    QueryMetrics, QueryExecution,
+    QueryMetrics, QueryExecution, CacheStrategy, ResourceUsage,
 };
 
 pub use caching::{
@@ -21,7 +21,11 @@ pub use caching::{
 };
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::rag::{SearchResult, VectorStore};
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::{SearchResult, VectorStore};
 use std::sync::Arc;
 use std::time::Duration;
 use serde::{Deserialize, Serialize};

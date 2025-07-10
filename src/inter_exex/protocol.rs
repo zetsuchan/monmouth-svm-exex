@@ -10,7 +10,7 @@ use std::collections::HashMap;
 pub enum ProtocolVersion {
     /// Initial protocol version
     V1,
-    /// Future versions can be added here
+    // Future versions can be added here
 }
 
 impl ProtocolVersion {

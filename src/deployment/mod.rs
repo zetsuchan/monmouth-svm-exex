@@ -540,7 +540,7 @@ pub struct DeploymentResourceMonitor {
 }
 
 /// Resource usage tracking
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ResourceUsage {
     /// Memory usage
     pub memory: MemoryUsage,
@@ -790,7 +790,7 @@ pub struct ShutdownCoordinator {
     /// Shutdown state
     state: Arc<RwLock<ShutdownState>>,
     /// Shutdown hooks
-    hooks: Vec<Arc<dyn ShutdownHook>>,
+    hooks: Vec<Arc<dyn ShutdownHandler>>,
     /// Shutdown signal receiver
     signal_receiver: Arc<Mutex<Option<oneshot::Receiver<ShutdownReason>>>>,
     /// Configuration
@@ -852,7 +852,7 @@ pub enum ShutdownPhase {
 
 /// Shutdown hook trait
 #[async_trait]
-pub trait ShutdownHook: Send + Sync {
+pub trait ShutdownHandler: Send + Sync {
     /// Execute shutdown hook
     async fn execute(&self, reason: &ShutdownReason) -> Result<()>;
     

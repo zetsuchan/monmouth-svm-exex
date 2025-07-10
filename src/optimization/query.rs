@@ -5,8 +5,13 @@
 //! cost-based optimization, and performance monitoring.
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::rag::{SearchResult, VectorStore};
+#[cfg(feature = "ai-agents")]
 use crate::ai::traits::ContextData;
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::{SearchResult, VectorStore, ContextData};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};

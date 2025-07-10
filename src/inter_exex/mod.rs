@@ -12,7 +12,7 @@ use tokio::sync::RwLock;
 use eyre::Result;
 
 pub use bus::{MessageBus, MessageBusConfig};
-pub use messages::{ExExMessage, MessageType, NodeInfo};
+pub use messages::{ExExMessage, MessageType, MessagePayload, NodeInfo};
 pub use protocol::{Protocol, ProtocolVersion};
 
 /// Main coordinator for inter-ExEx communication

@@ -37,6 +37,12 @@ pub enum SvmExExError {
     #[error("Network error: {0}")]
     Network(#[from] NetworkError),
 
+    #[error("Processing error: {0}")]
+    ProcessingError(String),
+
+    #[error("Channel send error: {0}")]
+    ChannelSend(String),
+
     #[error("Unknown error: {0}")]
     Unknown(String),
 }
@@ -123,6 +129,9 @@ pub enum AIAgentError {
 
     #[error("Execution timeout: operation={operation}, timeout_ms={timeout_ms}")]
     ExecutionTimeout { operation: String, timeout_ms: u64 },
+
+    #[error("Processing error: {0}")]
+    ProcessingError(String),
 }
 
 /// Cross-chain operation errors
@@ -223,12 +232,15 @@ pub enum NetworkError {
     NetworkUnreachable { reason: String },
 }
 
+/// General Result type that defaults to SvmExExError
+pub type Result<T> = std::result::Result<T, SvmExExError>;
+
 /// Result type aliases for convenience
-pub type SvmExExResult<T> = Result<T, SvmExExError>;
-pub type RethResult<T> = Result<T, RethExExError>;
-pub type SvmResult<T> = Result<T, SvmProcessingError>;
-pub type AIResult<T> = Result<T, AIAgentError>;
-pub type CrossChainResult<T> = Result<T, CrossChainError>;
+pub type SvmExExResult<T> = std::result::Result<T, SvmExExError>;
+pub type RethResult<T> = std::result::Result<T, RethExExError>;
+pub type SvmResult<T> = std::result::Result<T, SvmProcessingError>;
+pub type AIResult<T> = std::result::Result<T, AIAgentError>;
+pub type CrossChainResult<T> = std::result::Result<T, CrossChainError>;
 
 /// Error context trait for adding context to errors
 pub trait ErrorContext<T> {
@@ -241,7 +253,7 @@ pub trait ErrorContext<T> {
     fn with_cross_chain_context(self, operation: &str) -> CrossChainResult<T>;
 }
 
-impl<T, E> ErrorContext<T> for Result<T, E>
+impl<T, E> ErrorContext<T> for std::result::Result<T, E>
 where
     E: Into<SvmExExError>,
 {
@@ -289,7 +301,7 @@ pub mod utils {
 
     /// Log and return an error
     pub fn log_and_return_error<T>(error: SvmExExError) -> SvmExExResult<T> {
-        exex_error!(error = %error, "SVM ExEx error occurred");
+        tracing::error!(error = %error, "SVM ExEx error occurred");
         Err(error)
     }
 
@@ -340,5 +352,30 @@ impl fmt::Display for ErrorSeverity {
             ErrorSeverity::High => write!(f, "HIGH"),
             ErrorSeverity::Critical => write!(f, "CRITICAL"),
         }
+    }
+}
+
+// Error conversions for common types
+impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SvmExExError {
+    fn from(err: tokio::sync::mpsc::error::SendError<T>) -> Self {
+        SvmExExError::ChannelSend(format!("MPSC send error: {}", err))
+    }
+}
+
+impl From<serde_json::Error> for SvmExExError {
+    fn from(err: serde_json::Error) -> Self {
+        SvmExExError::SerializationError(SerializationError::JsonError(format!("{}", err)))
+    }
+}
+
+impl From<eyre::Report> for SvmExExError {
+    fn from(err: eyre::Report) -> Self {
+        SvmExExError::Unknown(format!("{}", err))
+    }
+}
+
+impl From<std::io::Error> for SvmExExError {
+    fn from(err: std::io::Error) -> Self {
+        SvmExExError::Unknown(format!("IO error: {}", err))
     }
 }

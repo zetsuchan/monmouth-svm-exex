@@ -1593,7 +1593,7 @@ impl AutoScaler {
                             before_instances: 1, // Would get actual instance count
                             after_instances: match &policy.action {
                                 ScalingAction::ScaleUp { instances } => 1 + instances,
-                                ScalingAction::ScaleDown { instances } => 1.saturating_sub(*instances),
+                                ScalingAction::ScaleDown { instances } => 1u32.saturating_sub(*instances),
                                 ScalingAction::ScaleTo { instances } => *instances,
                                 _ => 1,
                             },

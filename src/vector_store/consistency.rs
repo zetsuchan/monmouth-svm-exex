@@ -4,7 +4,11 @@
 //! blockchain reorganizations and handles vector store integrity.
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::embeddings::{EmbeddingResult, EmbeddingService};
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::{EmbeddingResult, EmbeddingService};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};

@@ -4,10 +4,16 @@
 //! RAG ExEx and SVM ExEx instances.
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::knowledge_graph::{SvmKnowledgeGraph, Entity, Edge};
+#[cfg(feature = "ai-agents")]
 use crate::ai::memory::AgentMemory;
+#[cfg(feature = "ai-agents")]
 use crate::ai::embeddings::EmbeddingService;
-use crate::inter_exex::{InterExExMessage, MessageType as InterMessageType};
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::{SvmKnowledgeGraph, Entity, Edge, AgentMemory, EmbeddingService};
+use crate::inter_exex::{ExExMessage, MessageType as InterMessageType};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};

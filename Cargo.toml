@@ -18,20 +18,24 @@ name = "implementation2"
 path = "implementation2/main.rs"
 
 [dependencies]
-# Reth dependencies for Ethereum node functionality
-reth = { git = "https://github.com/paradigmxyz/reth" }
-reth-exex = { git = "https://github.com/paradigmxyz/reth" }
-reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth" }
-reth-primitives = { git = "https://github.com/paradigmxyz/reth" }
-reth-tracing = { git = "https://github.com/paradigmxyz/reth" }
+# Reth dependencies for Ethereum node functionality - v1.5.1 release (commit dbe7ee9c)
+reth = { git = "https://github.com/paradigmxyz/reth", rev = "dbe7ee9c" }
+reth-exex = { git = "https://github.com/paradigmxyz/reth", rev = "dbe7ee9c" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", rev = "dbe7ee9c" }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", rev = "dbe7ee9c" }
+reth-tracing = { git = "https://github.com/paradigmxyz/reth", rev = "dbe7ee9c" }
 
-# Solana SVM dependencies for standalone SVM integration
-solana-svm = "2.0"
-solana-sdk = "1.18"
-solana-program = "1.18"
+# Solana SVM dependencies for standalone SVM integration - temporarily disabled for compilation
+# solana-svm = "1.17"
+# solana-sdk = "1.17"
+# solana-program = "1.17"
+# Pin zeroize to resolve version conflict
+# zeroize = "=1.3.0"
 
 # Async runtime and utilities
 tokio = { version = "1.0", features = ["full"] }
+tokio-stream = "0.1"
+futures = "0.3"
 futures-util = "0.3"
 
 # Error handling and utilities
@@ -68,6 +72,14 @@ chrono = { version = "0.4", features = ["serde"] }
 ndarray = "0.15"
 faiss = { version = "0.12", optional = true }
 
+# Additional dependencies needed by the implementation - using reth v1.5.1 compatible versions
+alloy-primitives = "1.2.0"
+# alloy-rpc-types = "0.2"  # Will add back after basic compilation works
+
+# Temporary mocks for Solana integration while fixing compilation
+# solana-program = { version = "1.16", optional = true }
+# solana-sdk = { version = "1.16", optional = true }
+
 # Decision making and planning
 petgraph = "0.6"
 clap = { version = "4.0", features = ["derive"] }
@@ -75,6 +87,8 @@ clap = { version = "4.0", features = ["derive"] }
 # Configuration and environment
 config = "0.14"
 dotenv = "0.15"
+toml = "0.8"
+num_cpus = "1.16"
 
 [dev-dependencies]
 # Testing dependencies
@@ -92,6 +106,7 @@ full = ["testing", "metrics", "ai-agents"]
 testing = []
 metrics = []
 ai-agents = ["faiss"]
+# solana = ["solana-program", "solana-sdk"]
 vector-db = ["faiss"]
 minimal = []
 

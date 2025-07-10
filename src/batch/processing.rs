@@ -5,7 +5,11 @@
 //! tracking optimized for SVM transaction processing speeds.
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::rag::{SearchResult, VectorStore};
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::{SearchResult, VectorStore};
 use crate::optimization::{QueryOptimizer, OptimizedQuery, RAGCacheSystem};
 use crate::batch::{
     BatchJob, BatchJobData, BatchJobResult, BatchJobType, BatchResultData,

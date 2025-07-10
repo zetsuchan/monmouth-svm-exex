@@ -5,7 +5,11 @@
 //! optimized for SVM transaction processing speeds.
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::rag::SearchResult;
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::SearchResult;
 use crate::optimization::query::{OptimizedQuery, QueryAnalysis, QueryType};
 use async_trait::async_trait;
 use dashmap::DashMap;

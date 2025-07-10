@@ -12,7 +12,11 @@ pub use processing::{
 };
 
 use crate::errors::*;
+#[cfg(feature = "ai-agents")]
 use crate::ai::rag::SearchResult;
+
+#[cfg(not(feature = "ai-agents"))]
+use crate::stubs::SearchResult;
 use crate::optimization::{OptimizedQuery, CacheKey, CachedData};
 use async_trait::async_trait;
 use dashmap::DashMap;
@@ -409,7 +413,7 @@ pub enum WorkerStatus {
     Busy,
     Paused,
     Failed,
-    Shutting Down,
+    ShuttingDown,
 }
 
 /// Worker capabilities
