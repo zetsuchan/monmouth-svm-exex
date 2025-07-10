@@ -52,6 +52,11 @@ pub mod vector_store;
 #[cfg(feature = "ai-agents")]
 pub mod ai;
 
+// Performance optimization modules
+pub mod optimization;
+pub mod batch;
+pub mod deployment;
+
 // Re-export commonly used types and functions
 pub use errors::{
     SvmExExError, SvmExExResult, RethExExError, SvmProcessingError, AIAgentError,
@@ -61,6 +66,22 @@ pub use errors::{
 pub use logging::{
     init_logging, init_ai_agent_logging, svm_transaction_span, ai_agent_span,
     cross_chain_span, PerformanceLogger, log_ai_decision, log_transaction_routing,
+};
+
+// Performance optimization exports
+pub use optimization::{
+    OptimizationService, OptimizationServiceConfig, QueryOptimizer, RAGCacheSystem,
+    OptimizedExecutionResult, PerformanceReport,
+};
+
+pub use batch::{
+    BatchManager, BatchManagerConfig, BatchProcessor, BatchProcessorConfig,
+    ProcessingStrategy, BatchMetrics,
+};
+
+pub use deployment::{
+    DeploymentManager, DeploymentConfig, HealthChecker, HealthCheckConfig,
+    HealthStatus, Environment,
 };
 
 // Version and build information
