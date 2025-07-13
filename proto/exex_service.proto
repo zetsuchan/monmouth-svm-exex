@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+package monmouth.exex.v1;
+
+import "messages.proto";
+import "agent_tx.proto";
+
+// ExEx service definition for remote execution
+service ExExService {
+  // Submit a transaction for processing
+  rpc SubmitTransaction(SubmitTransactionRequest) returns (SubmitTransactionResponse);
+  
+  // Submit an agent transaction
+  rpc SubmitAgentTransaction(SubmitAgentTransactionRequest) returns (SubmitAgentTransactionResponse);
+  
+  // Stream transaction results
+  rpc StreamTransactionResults(StreamTransactionResultsRequest) returns (stream TransactionResult);
+  
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  
+  // Get node info
+  rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse);
+  
+  // Sync state between ExEx instances
+  rpc SyncState(SyncStateRequest) returns (SyncStateResponse);
+  
+  // Execute tool orchestration
+  rpc ExecuteToolSequence(ExecuteToolSequenceRequest) returns (stream ToolExecutionUpdate);
+}
+
+// Submit transaction request
+message SubmitTransactionRequest {
+  bytes tx_hash = 1;
+  bytes tx_data = 2;
+  bytes sender = 3;
+  TransactionMetadata metadata = 4;
+}
+
+// Submit transaction response
+message SubmitTransactionResponse {
+  string transaction_id = 1;
+  bool accepted = 2;
+  string reason = 3; // If not accepted
+  uint64 estimated_execution_time_ms = 4;
+}
+
+// Submit agent transaction request
+message SubmitAgentTransactionRequest {
+  AgentTx agent_tx = 1;
+  ProcessingPriority priority = 2;
+}
+
+// Submit agent transaction response
+message SubmitAgentTransactionResponse {
+  string transaction_id = 1;
+  bool accepted = 2;
+  string reason = 3;
+  IntentClassification intent_classification = 4;
+}
+
+// Stream transaction results request
+message StreamTransactionResultsRequest {
+  repeated string transaction_ids = 1;
+  bool include_state_changes = 2;
+}
+
+// Transaction result
+message TransactionResult {
+  string transaction_id = 1;
+  bytes tx_hash = 2;
+  ExecutionStatus status = 3;
+  repeated StateChange state_changes = 4;
+  uint64 gas_used = 5;
+  uint64 execution_time_ms = 6;
+  bytes error_message = 7; // If failed
+}
+
+// Execution status
+enum ExecutionStatus {
+  EXECUTION_STATUS_UNSPECIFIED = 0;
+  EXECUTION_STATUS_PENDING = 1;
+  EXECUTION_STATUS_EXECUTING = 2;
+  EXECUTION_STATUS_SUCCESS = 3;
+  EXECUTION_STATUS_FAILED = 4;
+  EXECUTION_STATUS_REVERTED = 5;
+}
+
+// State change
+message StateChange {
+  bytes address = 1;
+  bytes old_value = 2;
+  bytes new_value = 3;
+  StateChangeType type = 4;
+}
+
+// State change type
+enum StateChangeType {
+  STATE_CHANGE_TYPE_UNSPECIFIED = 0;
+  STATE_CHANGE_TYPE_BALANCE = 1;
+  STATE_CHANGE_TYPE_STORAGE = 2;
+  STATE_CHANGE_TYPE_CODE = 3;
+  STATE_CHANGE_TYPE_NONCE = 4;
+}
+
+// Health check request
+message HealthCheckRequest {
+  repeated string components = 1; // Empty for all components
+}
+
+// Health check response
+message HealthCheckResponse {
+  bool healthy = 1;
+  map<string, ComponentHealth> components = 2;
+  uint64 uptime_seconds = 3;
+}
+
+// Component health
+message ComponentHealth {
+  bool healthy = 1;
+  string status = 2;
+  uint64 last_check_timestamp = 3;
+  map<string, string> metrics = 4;
+}
+
+// Get node info request
+message GetNodeInfoRequest {}
+
+// Get node info response
+message GetNodeInfoResponse {
+  string node_id = 1;
+  NodeType node_type = 2;
+  repeated string capabilities = 3;
+  map<string, string> metadata = 4;
+  LoadMetrics load_metrics = 5;
+}
+
+// Sync state request
+message SyncStateRequest {
+  uint64 from_block = 1;
+  uint64 to_block = 2;
+  bool include_alh = 3;
+  bool include_memory_proofs = 4;
+}
+
+// Sync state response
+message SyncStateResponse {
+  repeated BlockState block_states = 1;
+  bytes latest_alh = 2;
+  repeated MemoryProof memory_proofs = 3;
+}
+
+// Block state
+message BlockState {
+  uint64 block_number = 1;
+  bytes state_root = 2;
+  bytes alh = 3;
+  uint64 tx_count = 4;
+  uint64 timestamp = 5;
+}
+
+// Memory proof
+message MemoryProof {
+  string agent_id = 1;
+  bytes memory_root = 2;
+  repeated bytes proof_path = 3;
+  uint64 timestamp = 4;
+}
+
+// Tool execution request
+message ExecuteToolSequenceRequest {
+  repeated ToolStep steps = 1;
+  ExecutionStrategy strategy = 2;
+  map<string, string> context = 3;
+}
+
+// Tool step
+message ToolStep {
+  string tool_id = 1;
+  map<string, bytes> parameters = 2;
+  repeated string dependencies = 3; // IDs of steps that must complete first
+  bool allow_failure = 4;
+}
+
+// Execution strategy
+enum ExecutionStrategy {
+  EXECUTION_STRATEGY_UNSPECIFIED = 0;
+  EXECUTION_STRATEGY_SEQUENTIAL = 1;
+  EXECUTION_STRATEGY_PARALLEL = 2;
+  EXECUTION_STRATEGY_OPTIMIZED = 3; // Let the system decide
+}
+
+// Tool execution update
+message ToolExecutionUpdate {
+  string step_id = 1;
+  ToolExecutionStatus status = 2;
+  bytes result = 3;
+  string error_message = 4;
+  uint64 execution_time_ms = 5;
+}
+
+// Tool execution status
+enum ToolExecutionStatus {
+  TOOL_EXECUTION_STATUS_UNSPECIFIED = 0;
+  TOOL_EXECUTION_STATUS_PENDING = 1;
+  TOOL_EXECUTION_STATUS_RUNNING = 2;
+  TOOL_EXECUTION_STATUS_SUCCESS = 3;
+  TOOL_EXECUTION_STATUS_FAILED = 4;
+  TOOL_EXECUTION_STATUS_SKIPPED = 5;
+}
+
+// Processing priority
+enum ProcessingPriority {
+  PROCESSING_PRIORITY_UNSPECIFIED = 0;
+  PROCESSING_PRIORITY_LOW = 1;
+  PROCESSING_PRIORITY_NORMAL = 2;
+  PROCESSING_PRIORITY_HIGH = 3;
+  PROCESSING_PRIORITY_CRITICAL = 4;
+}

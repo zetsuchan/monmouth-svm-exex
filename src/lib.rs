@@ -51,6 +51,12 @@ pub mod svm;
 pub mod rag_integration;
 pub mod state_sync;
 
+// New modules for agent support and gRPC
+pub mod agent;
+
+#[cfg(feature = "grpc")]
+pub mod grpc;
+
 // Feature-gated modules
 #[cfg(feature = "ai-agents")]
 pub mod ai;
@@ -110,6 +116,21 @@ pub use rag_integration::{
 // State synchronization exports
 pub use state_sync::{
     StateSyncService, StateSyncConfig, StateInfo,
+};
+
+// Agent support exports
+pub use agent::{
+    AgentTx, AgentTxDecoder,
+    AgentTransactionPool, PooledAgentTx,
+    IntentClassifier, IntentClassification,
+    PreExecutionHook, PreExecutionContext,
+};
+
+// gRPC exports when feature is enabled
+#[cfg(feature = "grpc")]
+pub use grpc::{
+    ExExGrpcServer, ExExGrpcClient,
+    HealthService, ConnectionPool,
 };
 
 // Version and build information

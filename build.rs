@@ -1,7 +1,7 @@
 use std::env;
 use std::path::Path;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Print build information
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=PROFILE");
@@ -39,6 +39,28 @@ fn main() {
     // Reth ExEx specific configuration
     println!("cargo:rustc-env=RETH_EXEX_VERSION=1.5.0");
     println!("cargo:rustc-env=SVM_VERSION=2.0");
+    
+    // Compile protobuf files if grpc feature is enabled
+    #[cfg(feature = "grpc")]
+    {
+        println!("cargo:rerun-if-changed=proto/messages.proto");
+        println!("cargo:rerun-if-changed=proto/agent_tx.proto");
+        println!("cargo:rerun-if-changed=proto/exex_service.proto");
+        
+        tonic_build::configure()
+            .build_server(true)
+            .build_client(true)
+            .compile(
+                &[
+                    "proto/messages.proto",
+                    "proto/agent_tx.proto",
+                    "proto/exex_service.proto",
+                ],
+                &["proto"],
+            )?;
+    }
+    
+    Ok(())
 }
 
 fn check_system_deps() {

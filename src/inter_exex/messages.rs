@@ -27,6 +27,8 @@ pub enum MessageType {
     Shutdown,
     /// Generic data message
     Data,
+    /// Agent transaction
+    AgentTransaction,
 }
 
 /// Main message structure for inter-ExEx communication

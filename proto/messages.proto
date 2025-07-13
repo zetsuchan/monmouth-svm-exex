@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package monmouth.exex.v1;
+
+// Common message types for ExEx communication
+
+// Node type
+enum NodeType {
+  NODE_TYPE_UNSPECIFIED = 0;
+  NODE_TYPE_SVM = 1;
+  NODE_TYPE_RAG = 2;
+  NODE_TYPE_HYBRID = 3;
+  NODE_TYPE_OBSERVER = 4;
+}
+
+// Transaction metadata
+message TransactionMetadata {
+  uint64 block_number = 1;
+  uint64 tx_index = 2;
+  uint64 gas_price = 3;
+  uint64 nonce = 4;
+  repeated string tags = 5;
+  bytes memory_root = 6; // Added for memory state integration
+}
+
+// Load metrics
+message LoadMetrics {
+  uint32 load_percentage = 1;
+  uint64 available_compute = 2;
+  uint32 queue_depth = 3;
+  uint64 avg_processing_time_ms = 4;
+  uint32 memory_usage_percentage = 5;
+  uint64 bandwidth_usage_bps = 6;
+}
+
+// ALH (Accounts Lattice Hash) data
+message ALHData {
+  uint64 block_number = 1;
+  bytes prev_alh = 2;
+  bytes new_alh = 3;
+  repeated AccountUpdate account_updates = 4;
+  bytes proof = 5;
+}
+
+// Account update
+message AccountUpdate {
+  bytes address = 1;
+  bytes prev_hash = 2;
+  bytes new_hash = 3;
+  UpdateType update_type = 4;
+}
+
+// Update type
+enum UpdateType {
+  UPDATE_TYPE_UNSPECIFIED = 0;
+  UPDATE_TYPE_BALANCE = 1;
+  UPDATE_TYPE_CODE_DEPLOY = 2;
+  UPDATE_TYPE_STORAGE = 3;
+  UPDATE_TYPE_CREATION = 4;
+  UPDATE_TYPE_DELETION = 5;
+}

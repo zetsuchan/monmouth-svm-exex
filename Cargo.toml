@@ -96,6 +96,26 @@ dotenv = "0.15"
 toml = "0.8"
 num_cpus = "1.16"
 
+# gRPC and protobuf
+tonic = "0.12"
+prost = "0.13"
+tonic-build = { version = "0.12", optional = true }
+
+# Merkle tree and cryptography
+rs_merkle = "1.4"
+blake3 = "1.5"
+
+# Performance and parallelism
+crossbeam = "0.8"
+crossbeam-channel = "0.5"
+
+# Bridge integrations (optional)
+# wormhole-sdk = { version = "0.1", optional = true }
+# axelar-sdk = { version = "0.1", optional = true }
+
+[build-dependencies]
+tonic-build = "0.12"
+
 [dev-dependencies]
 # Testing dependencies
 tokio-test = "0.4"
@@ -108,14 +128,16 @@ rand = "0.8"
 
 [features]
 default = ["standard"]
-standard = ["testing", "metrics", "ai-agents"]
-full = ["testing", "metrics", "ai-agents", "solana"]
+standard = ["testing", "metrics", "ai-agents", "grpc"]
+full = ["testing", "metrics", "ai-agents", "solana", "grpc", "bridges"]
 testing = []
 metrics = []
 ai-agents = ["faiss"]
 solana = ["solana-program", "solana-sdk", "solana-runtime"]
 vector-db = ["faiss"]
 minimal = []
+grpc = []
+bridges = []
 
 [profile.release]
 lto = true

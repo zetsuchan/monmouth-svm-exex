@@ -1,0 +1,201 @@
+syntax = "proto3";
+
+package monmouth.exex.v1;
+
+// AgentTx represents a transaction submitted by an AI agent
+message AgentTx {
+  // Agent identity and authorization
+  AgentIdentity agent = 1;
+  
+  // Intent specification
+  Intent intent = 2;
+  
+  // Memory context requirements
+  MemoryContext memory_context = 3;
+  
+  // Cross-chain execution plans
+  repeated CrossChainPlan cross_chain_plans = 4;
+  
+  // Resource requirements
+  ResourceRequirements resources = 5;
+  
+  // Transaction metadata
+  AgentTxMetadata metadata = 6;
+  
+  // Signature
+  bytes signature = 7;
+}
+
+// Agent identity
+message AgentIdentity {
+  string agent_id = 1;
+  bytes public_key = 2;
+  AgentType agent_type = 3;
+  repeated string capabilities = 4;
+  map<string, string> attributes = 5;
+}
+
+// Agent type
+enum AgentType {
+  AGENT_TYPE_UNSPECIFIED = 0;
+  AGENT_TYPE_EXECUTOR = 1;      // Can execute transactions
+  AGENT_TYPE_ANALYZER = 2;      // Can analyze and route
+  AGENT_TYPE_ORCHESTRATOR = 3;  // Can orchestrate multi-step operations
+  AGENT_TYPE_VALIDATOR = 4;     // Can validate results
+}
+
+// Intent specification
+message Intent {
+  string intent_id = 1;
+  IntentType type = 2;
+  string description = 3;
+  repeated IntentParameter parameters = 4;
+  repeated IntentConstraint constraints = 5;
+  uint64 expiration_timestamp = 6;
+}
+
+// Intent type
+enum IntentType {
+  INTENT_TYPE_UNSPECIFIED = 0;
+  INTENT_TYPE_TRANSFER = 1;
+  INTENT_TYPE_SWAP = 2;
+  INTENT_TYPE_STAKE = 3;
+  INTENT_TYPE_BRIDGE = 4;
+  INTENT_TYPE_COMPUTE = 5;
+  INTENT_TYPE_STORAGE = 6;
+  INTENT_TYPE_CUSTOM = 7;
+}
+
+// Intent parameter
+message IntentParameter {
+  string name = 1;
+  bytes value = 2;
+  ParameterType type = 3;
+  bool required = 4;
+}
+
+// Parameter type
+enum ParameterType {
+  PARAMETER_TYPE_UNSPECIFIED = 0;
+  PARAMETER_TYPE_ADDRESS = 1;
+  PARAMETER_TYPE_AMOUNT = 2;
+  PARAMETER_TYPE_TOKEN = 3;
+  PARAMETER_TYPE_CHAIN_ID = 4;
+  PARAMETER_TYPE_BYTES = 5;
+  PARAMETER_TYPE_STRING = 6;
+}
+
+// Intent constraint
+message IntentConstraint {
+  ConstraintType type = 1;
+  bytes value = 2;
+  string description = 3;
+}
+
+// Constraint type
+enum ConstraintType {
+  CONSTRAINT_TYPE_UNSPECIFIED = 0;
+  CONSTRAINT_TYPE_MAX_GAS = 1;
+  CONSTRAINT_TYPE_MAX_SLIPPAGE = 2;
+  CONSTRAINT_TYPE_MIN_OUTPUT = 3;
+  CONSTRAINT_TYPE_DEADLINE = 4;
+  CONSTRAINT_TYPE_ALLOWED_CONTRACTS = 5;
+}
+
+// Memory context
+message MemoryContext {
+  repeated string required_memories = 1;
+  bytes memory_root = 2;
+  repeated MemoryRequirement requirements = 3;
+  uint64 max_memory_age_seconds = 4;
+}
+
+// Memory requirement
+message MemoryRequirement {
+  MemoryType type = 1;
+  string query = 2;
+  uint32 min_count = 3;
+  float min_similarity = 4;
+}
+
+// Memory type
+enum MemoryType {
+  MEMORY_TYPE_UNSPECIFIED = 0;
+  MEMORY_TYPE_SHORT_TERM = 1;
+  MEMORY_TYPE_LONG_TERM = 2;
+  MEMORY_TYPE_EPISODIC = 3;
+  MEMORY_TYPE_SEMANTIC = 4;
+}
+
+// Cross-chain execution plan
+message CrossChainPlan {
+  string chain_id = 1;
+  repeated ToolExecution tools = 2;
+  bytes target_contract = 3;
+  bytes calldata = 4;
+  ResourceAllocation resources = 5;
+}
+
+// Tool execution
+message ToolExecution {
+  string tool_id = 1;
+  map<string, bytes> inputs = 2;
+  repeated string required_outputs = 3;
+  bool can_fail = 4;
+  uint64 timeout_ms = 5;
+}
+
+// Resource allocation
+message ResourceAllocation {
+  uint64 gas_limit = 1;
+  uint64 compute_units = 2;
+  uint64 memory_mb = 3;
+  uint64 storage_kb = 4;
+}
+
+// Resource requirements
+message ResourceRequirements {
+  uint64 total_gas_estimate = 1;
+  uint64 total_compute_units = 2;
+  map<string, ResourceAllocation> per_chain_allocation = 3;
+  bool requires_gpu = 4;
+  bool requires_tee = 5;
+}
+
+// Agent transaction metadata
+message AgentTxMetadata {
+  uint64 nonce = 1;
+  uint64 timestamp = 2;
+  string correlation_id = 3;
+  repeated string tags = 4;
+  map<string, string> labels = 5;
+  uint32 priority = 6;
+}
+
+// Intent classification (returned by the system)
+message IntentClassification {
+  IntentCategory category = 1;
+  float confidence = 2;
+  repeated string suggested_tools = 3;
+  repeated string risk_factors = 4;
+  EstimatedResources estimated_resources = 5;
+}
+
+// Intent category
+enum IntentCategory {
+  INTENT_CATEGORY_UNSPECIFIED = 0;
+  INTENT_CATEGORY_DEFI = 1;
+  INTENT_CATEGORY_NFT = 2;
+  INTENT_CATEGORY_GAMING = 3;
+  INTENT_CATEGORY_IDENTITY = 4;
+  INTENT_CATEGORY_GOVERNANCE = 5;
+  INTENT_CATEGORY_INFRASTRUCTURE = 6;
+}
+
+// Estimated resources
+message EstimatedResources {
+  uint64 gas_estimate = 1;
+  uint64 compute_units_estimate = 2;
+  uint64 execution_time_ms_estimate = 3;
+  float success_probability = 4;
+}
