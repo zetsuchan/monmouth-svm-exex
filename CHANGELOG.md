@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.12.1] - 2025-10-06 - SVM Core Execution Implementation
+
+### 🔧 SVM Processor Realization
+- Replaced placeholder transaction parsing with multi-format Solana decoding supporting raw bytes, base64, and JSON-wrapped payloads.
+- Added real Solana bank execution with account pre/post tracking, state-change capture, and Blake3 state-root derivation.
+- Implemented checkpoint retention with automatic pruning plus async tests covering state-root updates and checkpoint reverts.
+- Introduced `base64` dependency to support the new decoding pipeline.
+
+### ⚠️ Known Issues
+- `cargo test` remains blocked by upstream `zeroize` version constraints between Solana (`<1.4`) and reth (`>=1.8`).
+
 ## [0.12.0] - 2025-07-13 - Remote ExEx & Agent Transaction Support
 
 ### 🚀 Major Enhancement: gRPC Remote Execution & Agent Transaction Infrastructure
